@@ -7,20 +7,20 @@
 
 ## Execution
 
+Edit unifi.yaml replacing the domain with what's appropriate for your environment:
 <pre>
-    Edit unifi.yaml replacing the domain with what's appropriate for your environment:
-    spec:
-      rules:
-      - host: unifi.<b>EXAMPLE.COM</b>
-        http:
-          paths:
-          - backend:
-              serviceName: unifi-service
-              servicePort: 8443
-      tls:
-      - hosts:
-        - unifi.example.com
-        secretName: unifi.<b>EXAMPLE.COM</b>-secret
+spec:
+  rules:
+  - host: unifi.<b>EXAMPLE.COM</b>
+    http:
+      paths:
+      - backend:
+          serviceName: unifi-service
+          servicePort: 8443
+  tls:
+  - hosts:
+    - unifi.example.com
+    secretName: unifi.<b>EXAMPLE.COM</b>-secret
 </pre>
 
   ### Variables:
