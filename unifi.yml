@@ -1,0 +1,121 @@
+---
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  labels:
+    app: unifi-controller
+    class: wifi
+  name: unifi-controller
+spec:
+  selector:
+    matchLabels:
+      app: unifi-controller
+  replicas: 1
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      labels:
+        app: unifi-controller
+        class: wifi
+    spec:
+      # securityContext:
+        # fsGroup: 750
+      containers:
+      - image: drewgwallace/unifi:latest
+        imagePullPolicy: IfNotPresent
+        name: unifi-controller
+        ports:
+        - containerPort: 3478
+          protocol: UDP
+        - containerPort: 6789
+        - containerPort: 8080
+        - containerPort: 8443
+        - containerPort: 8843
+        - containerPort: 10001
+          protocol: UDP
+        # https://help.ubnt.com/hc/en-us/articles/115009221227-UniFi-Recommended-Minimum-System-Requirements
+        resources:
+          limits:
+            cpu: "500m"
+            memory: "2G"
+        securityContext:
+          # fsGroup: 750
+          capabilities:
+            drop:
+            - ALL
+        volumeMounts:
+        - mountPath: /var/lib/unifi
+          name: unifi-database-vol
+        - mountPath: /var/log/unifi
+          name: unifi-log-vol
+      # nodeSelector:
+        # kubernetes.io/hostname: NODE.EXAMPLE.COM
+      restartPolicy: Always
+      volumes:
+      - name: unifi-database-vol
+        hostPath:
+          path: /opt/data/unifi/database
+          type: DirectoryOrCreate
+      - name: unifi-log-vol
+        hostPath:
+          path: /opt/data/unifi/logs
+          type: DirectoryOrCreate
+---
+apiVersion: v1
+kind: Service
+metadata:
+  annotations: {}
+  labels:
+    app: unifi-controller 
+    class: wifi
+  name: unifi-service
+spec:
+  ports:
+  - name: "3478"
+    port: 3478
+    protocol: UDP
+    targetPort: 3478
+  - name: "6789"
+    port: 6789
+    targetPort: 6789
+  - name: "8080"
+    port: 8080
+    targetPort: 8080
+  - name: "https"
+    port: 8443
+    targetPort: 8443
+  - name: "8843"
+    port: 8843
+    targetPort: 8843
+  - name: "10001"
+    port: 10001
+    protocol: UDP
+    targetPort: 10001
+  selector:
+    app: unifi-controller
+---
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  name: unifi-ingress
+  labels:
+    app: unifi-controller
+    class: wifi
+  annotations:
+    kubernetes.io/ingress.class: "nginx"
+    nginx.ingress.kubernetes.io/rewrite-target: /
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+    nginx.ingress.kubernetes.io/secure-backends: "true"
+spec:
+  rules:
+  - host: unifi.EXAMPLE.COM
+    http:
+      paths:
+      - backend:
+          serviceName: unifi-service
+          servicePort: 8443
+  tls:
+  - hosts:
+    - unifi.example.com
+    secretName: unifi.EXAMPLE.COM-secret
