@@ -19,8 +19,6 @@ spec:
         app: unifi-controller
         class: wifi
     spec:
-      # securityContext:
-        # fsGroup: 750
       containers:
       - image: drewgwallace/unifi:latest
         imagePullPolicy: IfNotPresent
@@ -55,10 +53,12 @@ spec:
       volumes:
       - name: unifi-database-vol
         hostPath:
+        # Make sure these directories have write permissions by the unifi user (e.g. chmod 777 database/)
           path: /opt/data/unifi/database
           type: DirectoryOrCreate
       - name: unifi-log-vol
         hostPath:
+        # Make sure these directories have write permissions by the unifi user (e.g. chmod 777 logs/)
           path: /opt/data/unifi/logs
           type: DirectoryOrCreate
 ---
